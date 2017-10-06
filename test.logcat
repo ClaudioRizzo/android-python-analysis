@@ -1,0 +1,13 @@
+--------- beginning of /dev/log/main
+D/gralloc ( 1156): Registering a buffer in the process that created it. This may cause memory ordering problems.
+E/libEGL  ( 1156): called unimplemented OpenGL ES API
+E/libEGL  ( 1156): called unimplemented OpenGL ES API
+E/libEGL  ( 1156): called unimplemented OpenGL ES API
+E/libEGL  ( 1156): called unimplemented OpenGL ES API
+E/SurfaceFlinger( 1156): glCheckFramebufferStatusOES error 373480904
+E/SurfaceFlinger( 1156): got GL_FRAMEBUFFER_COMPLETE_OES error while taking screenshot
+E/libEGL  ( 1156): called unimplemented OpenGL ES API
+E/libEGL  ( 1156): called unimplemented OpenGL ES API
+--------- beginning of /dev/log/system
+W/WindowManager( 1573): Screenshot failure taking screenshot for (164x246) to layer 21010
+I/ActivityManager( 1573): Killing 1975:com.android.exchange/u0a25 (adj 15): empty for 2722s
