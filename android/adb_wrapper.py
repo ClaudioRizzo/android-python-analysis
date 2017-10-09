@@ -7,8 +7,9 @@ class ADB():
 	@param: device - the name of the device this ADB has to manage
 	@param: adb_path - path to adb executable in the SDK. By default it is assumed to be in the PATH variable
 	'''
-	def __init__(self, device, adb_path='adb'):
+	def __init__(self, device, emulator=None, adb_path='adb'):
 		self.device = device
+		self.emulator = emulator
 		self.adb = adb_path
 		self.dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -17,8 +18,9 @@ class ADB():
 		
 		
 	def get_state(self):
-		return subprocess.run(['adb', '-s', self.device, 'get-state'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
+		proc = subprocess.run(['adb', '-s', self.device, 'get-state'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		return proc.stdout.decode('utf-8')
+	
 	def install_apk(self, apk_path):
 		return subprocess.run(['adb', '-s', self.device, 'install', apk_path])
 
@@ -34,10 +36,10 @@ class ADB():
 		if file_name is None:
 			logcat_process = subprocess.Popen([self.adb, '-s', self.device, 'logcat'])
 		else:
-			logcat_file = open(os.path.join(self.dir_path, file_name), 'w')
+			logcat_file = open(os.path.join(self.dir_path, 'logs', file_name), 'w')
 			logcat_process = subprocess.Popen([self.adb, '-s', self.device, 'logcat'], stdout=logcat_file)
 		
-		return (logcat_file, logcat_process)
+		return LogCat(logcat_file, logcat_process)
 
 	def stop_logcat(self, logcat):
 		logcat.pid.terminate()

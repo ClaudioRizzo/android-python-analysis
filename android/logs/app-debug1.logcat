@@ -1,0 +1,80 @@
+--------- beginning of main
+10-09 17:14:48.600  1694  1694 D CarrierSvcBindHelper: No carrier app for: 0
+10-09 17:14:48.601  1694  1694 D CarrierConfigLoader: mHandler: 9 phoneId: 0
+--------- beginning of system
+10-09 17:14:48.610  1498  1511 W VoiceInteractionManagerService: no available voice recognition services found for user 0
+10-09 17:14:48.610  1498  1511 W LocationProviderProxy-network: Odd, no component found for service com.android.location.service.v3.NetworkLocationProvider
+10-09 17:14:48.610  1498  1511 W GeocoderProxy: Odd, no component found for service com.android.location.service.GeocodeProvider
+10-09 17:14:48.610  1498  1511 W GeofenceProxy: Odd, no component found for service com.android.location.service.GeofenceProvider
+10-09 17:14:48.610  1498  1511 W ActivityRecognitionProxy: Odd, no component found for service com.android.location.service.ActivityRecognitionProvider
+10-09 17:14:48.755  2374  2374 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+10-09 17:14:48.756  2374  2374 D AndroidRuntime: CheckJNI is ON
+10-09 17:14:48.756  2374  2374 E cutils-trace: Error opening trace file: Permission denied (13)
+10-09 17:14:48.769  2374  2374 W art     : Unexpected CPU variant for X86 using defaults: x86
+10-09 17:14:48.771  2374  2374 D ICU     : No timezone override file found: /data/misc/zoneinfo/current/icu/icu_tzdata.dat
+10-09 17:14:48.779  2374  2374 E memtrack: Couldn't load memtrack module (No such file or directory)
+10-09 17:14:48.779  2374  2374 E android.os.Debug: failed to load memtrack module: -2
+10-09 17:14:48.780  2374  2374 I Radio-JNI: register_android_hardware_Radio DONE
+10-09 17:14:48.785  2374  2374 D AndroidRuntime: Calling main entry com.android.commands.monkey.Monkey
+10-09 17:14:48.800  1498  1512 W BroadcastQueue: Skipping deliver [background] BroadcastRecord{bee8737 u-1 android.net.conn.CONNECTIVITY_CHANGE} to ReceiverList{d4c84a4 2374 (unknown name)/2000/u-1 remote:d4939d1}: process crashing
+10-09 17:14:48.804  1498  1606 I ActivityManager: START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.rhul.clod.babelviewintents/.MainActivity} from uid 2000 on display 0
+10-09 17:14:48.814  2385  2385 I art     : Not late-enabling -Xcheck:jni (already on)
+10-09 17:14:48.814  2385  2385 W art     : Unexpected CPU variant for X86 using defaults: x86
+10-09 17:14:48.822  1498  1726 I ActivityManager: Start proc 2385:com.rhul.clod.babelviewintents/u0a61 for activity com.rhul.clod.babelviewintents/.MainActivity
+10-09 17:14:48.862  2385  2385 W System  : ClassLoader referenced unknown path: /data/app/com.rhul.clod.babelviewintents-1/lib/x86
+10-09 17:14:48.928  2385  2385 D AndroidRuntime: Shutting down VM
+--------- beginning of crash
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: FATAL EXCEPTION: main
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: Process: com.rhul.clod.babelviewintents, PID: 2385
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: java.lang.RuntimeException: Unable to start activity ComponentInfo{com.rhul.clod.babelviewintents/com.rhul.clod.babelviewintents.MainActivity}: java.lang.SecurityException: getDeviceId: Neither user 10061 nor current process has android.permission.READ_PHONE_STATE.
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2646)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:2707)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.app.ActivityThread.-wrap12(ActivityThread.java)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1460)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:102)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:154)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:6077)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:865)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:755)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: Caused by: java.lang.SecurityException: getDeviceId: Neither user 10061 nor current process has android.permission.READ_PHONE_STATE.
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.os.Parcel.readException(Parcel.java:1683)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.os.Parcel.readException(Parcel.java:1636)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at com.android.internal.telephony.ITelephony$Stub$Proxy.getDeviceId(ITelephony.java:4118)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.telephony.TelephonyManager.getDeviceId(TelephonyManager.java:801)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at com.rhul.clod.babelviewintents.MainActivity.onCreate(MainActivity.java:27)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.app.Activity.performCreate(Activity.java:6664)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1118)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2599)
+10-09 17:14:48.928  2385  2385 E AndroidRuntime: 	... 9 more
+10-09 17:14:48.931  1498  1606 W ActivityManager:   Force finishing activity com.rhul.clod.babelviewintents/.MainActivity
+10-09 17:14:48.970  2092  2140 D InitAlarmsService: Clearing and rescheduling alarms.
+10-09 17:14:49.446  1498  1512 W ActivityManager: Activity pause timeout for ActivityRecord{7d125c2 u0 com.rhul.clod.babelviewintents/.MainActivity t2 f}
+10-09 17:14:49.461  1249  1249 D gralloc : Registering a buffer in the process that created it. This may cause memory ordering problems.
+10-09 17:14:49.461  1249  1249 E libEGL  : called unimplemented OpenGL ES API
+10-09 17:14:49.461  1249  1249 E SurfaceFlinger: glCheckFramebufferStatusOES error 630556807
+10-09 17:14:49.461  1249  1249 E SurfaceFlinger: got GL_FRAMEBUFFER_COMPLETE_OES error while taking screenshot
+10-09 17:14:49.462  1498  1512 W WindowManager: Screenshot failure taking screenshot for (320x480) to layer 22005
+10-09 17:14:49.828  1498  1512 I ActivityManager: Killing 1800:com.android.deskclock/u0a29 (adj 906): empty #17
+10-09 17:14:50.001  1498  1519 I WindowManager: Destroying surface Surface(name=Starting com.rhul.clod.babelviewintents) called by com.android.server.wm.WindowStateAnimator.destroySurface:2014 com.android.server.wm.WindowStateAnimator.destroySurfaceLocked:881 com.android.server.wm.WindowState.removeLocked:1449 com.android.server.wm.WindowManagerService.removeWindowInnerLocked:2478 com.android.server.wm.AppWindowToken.destroySurfaces:365 com.android.server.wm.WindowStateAnimator.finishExit:565 com.android.server.wm.AppWindowAnimator.stepAnimationLocked:427 com.android.server.wm.WindowAnimator.updateAppWindowsLocked:176 
+10-09 17:14:50.048  1498  1519 W WindowManager: Failed looking up window
+10-09 17:14:50.048  1498  1519 W WindowManager: java.lang.IllegalArgumentException: Requested window android.view.ViewRootImpl$W@3a3f64b does not exist
+10-09 17:14:50.048  1498  1519 W WindowManager: 	at com.android.server.wm.WindowManagerService.windowForClientLocked(WindowManagerService.java:9100)
+10-09 17:14:50.048  1498  1519 W WindowManager: 	at com.android.server.wm.WindowManagerService.windowForClientLocked(WindowManagerService.java:9091)
+10-09 17:14:50.048  1498  1519 W WindowManager: 	at com.android.server.wm.WindowManagerService.removeWindow(WindowManagerService.java:2296)
+10-09 17:14:50.048  1498  1519 W WindowManager: 	at com.android.server.wm.Session.remove(Session.java:193)
+10-09 17:14:50.048  1498  1519 W WindowManager: 	at android.view.ViewRootImpl.dispatchDetachedFromWindow(ViewRootImpl.java:3286)
+10-09 17:14:50.048  1498  1519 W WindowManager: 	at android.view.ViewRootImpl.doDie(ViewRootImpl.java:5881)
+10-09 17:14:50.048  1498  1519 W WindowManager: 	at android.view.ViewRootImpl$ViewRootHandler.handleMessage(ViewRootImpl.java:3622)
+10-09 17:14:50.048  1498  1519 W WindowManager: 	at android.os.Handler.dispatchMessage(Handler.java:102)
+10-09 17:14:50.048  1498  1519 W WindowManager: 	at android.os.Looper.loop(Looper.java:154)
+10-09 17:14:50.048  1498  1519 W WindowManager: 	at android.os.HandlerThread.run(HandlerThread.java:61)
+10-09 17:14:50.048  1498  1519 W WindowManager: 	at com.android.server.ServiceThread.run(ServiceThread.java:46)
+10-09 17:14:50.869  2374  2374 I art     : System.exit called, status: 1
+10-09 17:14:50.870  2374  2374 I AndroidRuntime: VM exiting with result code 1.
+10-09 17:14:51.777  1498  1552 D ConnectivityService: NetworkAgentInfo [MOBILE (LTE) - 100] validation failed
+10-09 17:14:51.808  1498  1566 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+10-09 17:14:58.388  1498  1725 I ActivityManager: Killing 2164:com.android.managedprovisioning/u0a13 (adj 906): empty #17
+10-09 17:14:59.837  1498  1512 W ActivityManager: Activity destroy timeout for ActivityRecord{7d125c2 u0 com.rhul.clod.babelviewintents/.MainActivity t2 f}
+10-09 17:15:03.337  1498  1566 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+10-09 17:15:05.795  1498  1552 D ConnectivityService: NetworkAgentInfo [MOBILE (LTE) - 100] validation failed

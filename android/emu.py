@@ -1,11 +1,12 @@
 import subprocess
 
 class AndroidEmulator():
-	def __init__(self, name, adb, sdk_id='', emulator_path='emulator', avdmanager_path='avdmanager'):
+	def __init__(self, name, proxy='127.0.0.1:8080', sdk_id='', emulator_path='emulator', avdmanager_path='avdmanager'):
 		self.avdmanager = avdmanager_path
 		self.emulator = emulator_path
 		self.name = name
-		self.adb = adb
+		self.proxy = proxy
+		self.proxy_port = int(self.proxy.split(':')[-1])
 		
 		if name not in self.__get_present_avds():
 			self.__create_avd(name, sdk_id)
@@ -36,9 +37,9 @@ class AndroidEmulator():
 		proc.communicate(b'no')
 
 	
-	def start_emulator_with_proxy(self, proxy, no_window=True):
+	def start_emulator_with_proxy(self, port=5554, 	no_window=True):
 		if no_window:
-			return subprocess.Popen([self.emulator, '-avd', self.name, '-no-window', '-writable-system', '-http-proxy', proxy ])
+			return subprocess.Popen([self.emulator, '-avd', self.name, '-ports', str(port)+','+str(port+1), '-no-window', '-writable-system', '-http-proxy', self.proxy ])
 		else:
-			return subprocess.Popen([self.emulator, '-avd', self.name, '-writable-system' ,'-http-proxy', proxy ])
+			return subprocess.Popen([self.emulator, '-avd', self.name, '-ports', str(port)+','+str(port+1), '-writable-system' ,'-http-proxy', self.proxy ])
 
