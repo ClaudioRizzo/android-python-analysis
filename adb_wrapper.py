@@ -50,6 +50,21 @@ class ADB():
 	def clear_logs(self):
 		subprocess.run([self.adb, '-s', self.device, 'logcat', '-c'])
 
+
+	def push_file_to_emu(self, origin, destination):
+		subprocess.run([self.adb, '-s', self.device, 'push', origin, destination])
+
+	def __writable_sdcard(self):
+		subprocess.run([self.adb, '-s', self.device, 'shell', '"mount -o rw,remount rootfs /"'])
+		subprocess.run([self.adb, '-s', self.device, 'shell', '"chmod 777 /mnt/sdcard"'])
+
+	def setup_ca(self, cacert_path, cacert_name):
+		subprocess.run([self.adb, '-s', self.device, 'shell', '"mount -o remount,rw /system"'])
+		self.push_file_to_emu(cacert_path, '/system/etc/security/cacerts/')
+		subprocess.run([self.adb, '-s', self.device, 'shell', '"chmod 644 /system/etc/security/cacerts/'+cacert_name+'"'])
+		subprocess.run([self.adb, '-s', self.device, 'shell', 'reboot'])
+
+
 class LogCat():
 	def __init__(self, log_file, pid):
 		self.log_file = log_file

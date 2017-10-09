@@ -1,10 +1,11 @@
 import subprocess
 
 class AndroidEmulator():
-	def __init__(self, name, sdk_id='', emulator_path='emulator', avdmanager_path='avdmanager'):
+	def __init__(self, name, adb, sdk_id='', emulator_path='emulator', avdmanager_path='avdmanager'):
 		self.avdmanager = avdmanager_path
 		self.emulator = emulator_path
 		self.name = name
+		self.adb = adb
 		
 		if name not in self.__get_present_avds():
 			self.__create_avd(name, sdk_id)
@@ -34,10 +35,10 @@ class AndroidEmulator():
 		proc = subprocess.Popen([self.avdmanager, 'create', 'avd', '-n', name, '-k', sdk_id], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 		proc.communicate(b'no')
 
-	#def start_emulator(no_window=True):
-		#subprocess.Popen([self.emulator, '-avd', self.name, ])
+	
+	def start_emulator_with_proxy(self, proxy, no_window=True):
+		if no_window:
+			return subprocess.Popen([self.emulator, '-avd', self.name, '-no-window', '-writable-system', '-http-proxy', proxy ])
+		else:
+			return subprocess.Popen([self.emulator, '-avd', self.name, '-writable-system' ,'-http-proxy', proxy ])
 
-
-
-
-emu = AndroidEmulator( "MyTest", avdmanager_path='/home/clod/Android/Sdk/tools/bin/avdmanager')
