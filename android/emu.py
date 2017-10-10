@@ -1,9 +1,12 @@
 import subprocess
+from android.config import Config
+
 
 class AndroidEmulator():
-	def __init__(self, name, proxy='127.0.0.1:8080', sdk_id='', emulator_path='emulator', avdmanager_path='avdmanager'):
-		self.avdmanager = avdmanager_path
-		self.emulator = emulator_path
+	def __init__(self, name, proxy='127.0.0.1:8080', sdk_id=''):
+		conf = Config()
+		self.avdmanager = conf.avdmanager
+		self.emulator = conf.emulator
 		self.name = name
 		self.proxy = proxy
 		self.proxy_port = int(self.proxy.split(':')[-1])
@@ -39,7 +42,7 @@ class AndroidEmulator():
 	
 	def start_emulator_with_proxy(self, port=5554, 	no_window=True):
 		if no_window:
-			return subprocess.Popen([self.emulator, '-avd', self.name, '-ports', str(port)+','+str(port+1), '-no-window', '-writable-system', '-http-proxy', self.proxy ])
+			return subprocess.Popen([self.emulator, '-avd', self.name, '-port', str(port), '-no-window', '-writable-system', '-http-proxy', self.proxy ])
 		else:
-			return subprocess.Popen([self.emulator, '-avd', self.name, '-ports', str(port)+','+str(port+1), '-writable-system' ,'-http-proxy', self.proxy ])
+			return subprocess.Popen([self.emulator, '-avd', self.name, '-port', str(port), '-writable-system' ,'-http-proxy', self.proxy ])
 

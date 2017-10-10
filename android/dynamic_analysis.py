@@ -4,6 +4,8 @@ import logging
 import os
 
 from android import emu, adb_wrapper, apk
+from android import config
+
 from multiprocessing import Queue, Process
 from multiprocessing.pool import Pool
 
@@ -28,9 +30,11 @@ class NoDeviceFoundError(Exception):
 
 class Analysis():
 
-	def __init__(self, apk_folder, processes=1,  name='AndroidAnalysis'):
+	def __init__(self, processes=1,  name='AndroidAnalysis'):
+		conf = config.Config()
+		self.id_file = conf.ids
 		self.logger = self.__set_logger(name, log_file=name+'.log', log_file_mode='a')
-		self.apk_folder = apk_folder
+		self.apk_folder = conf.apks
 		self.name = name
 		self.processes = processes
 		self.apk_queue = Queue()
@@ -56,20 +60,21 @@ class Analysis():
 	        lg.addHandler(fh)
 	    return lg
 
-	def init_analysis(self, emu_name='DynamicAnalysis', sdk_id='', emulator_path='emulator', avdmanager_path='avdmanager', adb_path='adb'):
+	def init_analysis(self, emu_name='DynamicAnalysis', sdk_id=''):
 		proxy_port = 8080
 		emu_port = 5554
 		
 		for i in range(self.processes):
 			
-			emu_name += '_'+str(i)
+			name = emu_name+'_'+str(i)
 			proxy_port += i
-			proxy = '127.0.0.1:'+str(proxy_port)
+			proxy = '134.219.188.141:'+str(proxy_port)
 			
-			a_emu = emu.AndroidEmulator(emu_name, proxy=proxy, sdk_id=sdk_id, emulator_path=emulator_path, avdmanager_path=avdmanager_path)
-			a_emu.start_emulator_with_proxy(no_window=False)
+			a_emu = emu.AndroidEmulator(name, proxy=proxy, sdk_id=sdk_id)
+			a_emu.start_emulator_with_proxy(port=emu_port, no_window=False)
 			dev = 'emulator-'+str(emu_port)
-			adb = adb_wrapper.ADB(dev, emulator=a_emu, adb_path=adb_path)
+			print(dev)
+			adb = adb_wrapper.ADB(dev, emulator=a_emu)
 			emu_port+=2
 
 			self.adb_queue.put(adb)
@@ -80,28 +85,23 @@ class Analysis():
 			raise RuntimeError
 
 
-	def init_queues(self, id_file='apks.txt'):
-		with open(id_file, 'r') as apks_file:
+	def init_queues(self):
+		with open(self.id_file, 'r') as apks_file:
 			apks = apks_file.readlines()
 
 		for apk_id in apks:
 			apk_id = apk_id.replace('\n', '')
 			apk_path = os.path.join(self.apk_folder, apk_id+'.apk')
 			
-			_apk = apk.APK(apk_path, aapt_path='aapt')
+			_apk = apk.APK(apk_path)
 			self.apk_queue.put(_apk)
 
 
-	def do_analysis(self, processes):
-		workers = MyPool(processes, self.analysis, )
+	def do_analysis(self):
+		workers = MyPool(self.processes, self.analysis, )
 		workers.close()
 		workers.join()
 
 	def analysis(self):
 		raise NotImplementedError
 
-
-if __name__ == '__main__':
-	
-	a = Analysis('/home/clod/BabelViewTestApps/BabelViewIntents/app/build/outputs/apk/')
-	a.init_analysis(avdmanager_path='/home/clod/Android/Sdk/tools/bin/avdmanager')

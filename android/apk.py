@@ -1,10 +1,12 @@
 import subprocess
 import re
 
+from android.config import Config
+
 class APK():
 	def __init__(self, apk_path, aapt_path='aapt'):
-		 
-		self.aapt = aapt_path
+		conf = Config()
+		self.aapt = conf.aapt
 		self.path = apk_path
 		self.apk_id = self.path.split('/')[-1].split('.')[0]
 		self.package = None
@@ -20,7 +22,6 @@ class APK():
 			m = re.search(r'package: name.*', out)
 			if m:
 				line = m.group(0)
-				print("HELLO: "+line)
 				self.package = line.split(' ')[1].split('=')[1].replace("'", "").replace('\n', '')
 			
 		return self.package

@@ -1,16 +1,20 @@
 import subprocess
 import os
 
+from android.config import Config
+
 class ADB():
 
 	'''
 	@param: device - the name of the device this ADB has to manage
 	@param: adb_path - path to adb executable in the SDK. By default it is assumed to be in the PATH variable
 	'''
-	def __init__(self, device, emulator=None, adb_path='adb'):
+	def __init__(self, device, emulator):
+		conf = Config()
 		self.device = device
 		self.emulator = emulator
-		self.adb = adb_path
+		self.adb = conf.adb
+		self.results = conf.results
 		self.dir_path = os.path.dirname(os.path.realpath(__file__))
 
 	def start_server(self):
@@ -36,7 +40,7 @@ class ADB():
 		if file_name is None:
 			logcat_process = subprocess.Popen([self.adb, '-s', self.device, 'logcat'])
 		else:
-			logcat_file = open(os.path.join(self.dir_path, 'logs', file_name), 'w')
+			logcat_file = open(os.path.join(self.results, file_name), 'w')
 			logcat_process = subprocess.Popen([self.adb, '-s', self.device, 'logcat'], stdout=logcat_file)
 		
 		return LogCat(logcat_file, logcat_process)
@@ -57,13 +61,15 @@ class ADB():
 		subprocess.run([self.adb, '-s', self.device, 'push', origin, destination])
 
 	def __writable_sdcard(self):
-		subprocess.run([self.adb, '-s', self.device, 'shell', '"mount -o rw,remount rootfs /"'])
+		subprocess.run([self.adb, '-s', self.device, 'shell','su','-c', '"mount -o rw,remount rootfs /"'])
 		subprocess.run([self.adb, '-s', self.device, 'shell', '"chmod 777 /mnt/sdcard"'])
 
 	def setup_ca(self, cacert_path, cacert_name):
-		subprocess.run([self.adb, '-s', self.device, 'shell', '"mount -o remount,rw /system"'])
+		#subprocess.run([self.adb, '-s', self.device, 'root'])
+		#subprocess.run([self.adb, '-s', self.device, 'shell', 'su','-c', '"mount -o remount,rw /system"'])
+		print (" ".join([self.adb, '-s', self.device, 'shell', 'su','-c', '"mount -o remount,rw /system"']))
 		self.push_file_to_emu(cacert_path, '/system/etc/security/cacerts/')
-		subprocess.run([self.adb, '-s', self.device, 'shell', '"chmod 644 /system/etc/security/cacerts/'+cacert_name+'"'])
+		subprocess.run([self.adb, '-s', self.device, 'shell', 'su','-c', '"chmod 644 /system/etc/security/cacerts/'+cacert_name+'"'])
 		subprocess.run([self.adb, '-s', self.device, 'shell', 'reboot'])
 
 
