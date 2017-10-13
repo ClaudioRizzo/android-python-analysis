@@ -3,6 +3,7 @@ import os
 
 from android.config import Config
 
+
 class ADB():
 
 	'''
@@ -12,6 +13,7 @@ class ADB():
 	def __init__(self, device, emulator):
 		conf = Config()
 		self.device = device
+		self.dev_port = int(device.split('-')[-1])
 		self.emulator = emulator
 		self.adb = conf.adb
 		self.results = conf.results
@@ -25,14 +27,14 @@ class ADB():
 		proc = subprocess.run(['adb', '-s', self.device, 'get-state'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		return proc.stdout.decode('utf-8')
 	
-	def install_apk(self, apk_path):
-		return subprocess.run(['adb', '-s', self.device, 'install', apk_path])
+	def install_apk(self, apk_path, timeout=None):
+		return subprocess.run(['adb', '-s', self.device, 'install', apk_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
 
-	def uninstall_apk(self, apk_package):
-		return subprocess.run(['adb', '-s', self.device, 'uninstall', apk_package])
+	def uninstall_apk(self, apk_package, timeout=None):
+		return subprocess.run(['adb', '-s', self.device, 'uninstall', apk_package], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
 
-	def monkey(self, package_name):
-		return subprocess.run(['adb', '-s', self.device, 'shell', 'monkey', '-p', package_name, '--throttle', '2000', '100'])
+	def monkey(self, package_name, timeout=None):
+		return subprocess.run(['adb', '-s', self.device, 'shell', 'monkey', '-p', package_name, '--throttle', '2000', '100'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
 
 	def logcat(self, file_name=None):
 		logcat_file = None
@@ -46,19 +48,20 @@ class ADB():
 		return LogCat(logcat_file, logcat_process)
 
 	def stop_logcat(self, logcat):
-		logcat.pid.terminate()
 		logcat.log_file.close()
+		logcat.pid.terminate()
+		
 
 	def force_logcat_stop(self, logcat_pid):
 		logcat.pid.kill()
 		logcat.log_file.close()
 
 	def clear_logs(self):
-		subprocess.run([self.adb, '-s', self.device, 'logcat', '-c'])
+		return subprocess.run([self.adb, '-s', self.device, 'logcat', '-c'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 	def push_file_to_emu(self, origin, destination):
-		subprocess.run([self.adb, '-s', self.device, 'push', origin, destination])
+		subprocess.run([self.adb, '-s', self.device, 'push', origin, destination], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 	def __writable_sdcard(self):
 		subprocess.run([self.adb, '-s', self.device, 'shell','su','-c', '"mount -o rw,remount rootfs /"'])
@@ -66,11 +69,17 @@ class ADB():
 
 	def setup_ca(self, cacert_path, cacert_name):
 		#subprocess.run([self.adb, '-s', self.device, 'root'])
-		#subprocess.run([self.adb, '-s', self.device, 'shell', 'su','-c', '"mount -o remount,rw /system"'])
-		print (" ".join([self.adb, '-s', self.device, 'shell', 'su','-c', '"mount -o remount,rw /system"']))
+		subprocess.run([self.adb, '-s', self.device, 'shell', 'su','-c', '"mount -o remount,rw /system"'])
+		#print (" ".join([self.adb, '-s', self.device, 'shell', 'su','-c', '"mount -o remount,rw /system"']))
 		self.push_file_to_emu(cacert_path, '/system/etc/security/cacerts/')
 		subprocess.run([self.adb, '-s', self.device, 'shell', 'su','-c', '"chmod 644 /system/etc/security/cacerts/'+cacert_name+'"'])
 		subprocess.run([self.adb, '-s', self.device, 'shell', 'reboot'])
+
+	def stop_emulator(self):
+		return subprocess.run([self.adb, '-s', self.device, 'emu', 'kill'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+	def reboot_emulator(self, timeout=None):
+		return subprocess.run([self.adb, '-s', self.device, 'reboot'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
 
 
 class LogCat():

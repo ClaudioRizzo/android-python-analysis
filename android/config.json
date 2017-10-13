@@ -4,6 +4,7 @@
 	"avdmanager": "/home/clod/Android/Sdk/tools/bin/avdmanager",
 	"adb": "adb",
 	"apks": "/home/clod/mnt_point/apks",
-	"results": "/home/clod/android-python-analysis/logs",
-	"ids": "/home/clod/BV_ScriptsAndExperiments/experiment_results_SnP_Sept_2017/experiment_results/vulnerables.txt"
+	"results": "/home/clod/android-python-analysis/results",
+	"ids": "/home/clod/android-python-analysis/vulnerables.txt",
+	"proxy": "134.219.188.141"
 }

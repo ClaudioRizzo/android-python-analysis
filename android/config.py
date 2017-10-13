@@ -13,6 +13,7 @@ class Config():
 				self.apks = j_data['apks']
 				self.ids = j_data['ids']
 				self.results = j_data['results']
+				self.proxy = j_data['proxy']
 
 	__instance = None
 	def __init__(self):

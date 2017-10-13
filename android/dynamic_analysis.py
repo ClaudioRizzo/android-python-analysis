@@ -6,7 +6,7 @@ import os
 from android import emu, adb_wrapper, apk
 from android import config
 
-from multiprocessing import Queue, Process
+from multiprocessing import Queue, Process, Lock
 from multiprocessing.pool import Pool
 
 class NoDaemonProcess(Process):
@@ -35,6 +35,7 @@ class Analysis():
 		self.id_file = conf.ids
 		self.logger = self.__set_logger(name, log_file=name+'.log', log_file_mode='a')
 		self.apk_folder = conf.apks
+		self.proxy_ip = conf.proxy
 		self.name = name
 		self.processes = processes
 		self.apk_queue = Queue()
@@ -60,7 +61,7 @@ class Analysis():
 	        lg.addHandler(fh)
 	    return lg
 
-	def init_analysis(self, emu_name='DynamicAnalysis', sdk_id=''):
+	def init_analysis(self, emu_name='DynamicAnalysis', sdk_id='', no_window=True):
 		proxy_port = 8080
 		emu_port = 5554
 		
@@ -68,12 +69,11 @@ class Analysis():
 			
 			name = emu_name+'_'+str(i)
 			proxy_port += i
-			proxy = '134.219.188.141:'+str(proxy_port)
+			proxy = self.proxy_ip+':'+str(proxy_port)
 			
 			a_emu = emu.AndroidEmulator(name, proxy=proxy, sdk_id=sdk_id)
-			a_emu.start_emulator_with_proxy(port=emu_port, no_window=False)
+			a_emu.start_emulator_with_proxy(port=emu_port, no_window=no_window)
 			dev = 'emulator-'+str(emu_port)
-			print(dev)
 			adb = adb_wrapper.ADB(dev, emulator=a_emu)
 			emu_port+=2
 
@@ -82,8 +82,7 @@ class Analysis():
 		# if the processes are more than the abds
 		# then there was an error in starting the emulators
 		if self.adb_queue.qsize() != self.processes:
-			raise RuntimeError
-
+			raise RuntimeError	
 
 	def init_queues(self):
 		with open(self.id_file, 'r') as apks_file:
@@ -98,10 +97,11 @@ class Analysis():
 
 
 	def do_analysis(self):
+		
 		workers = MyPool(self.processes, self.analysis, )
 		workers.close()
 		workers.join()
 
-	def analysis(self):
+	def analysis(self, lock):
 		raise NotImplementedError
 
