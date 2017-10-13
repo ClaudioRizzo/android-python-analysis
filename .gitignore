@@ -2,6 +2,13 @@
 dynamic_analysis/
 dynamic_analysis/*
 dynamic_analysis/**
+logs/*
+logs/**
+logs/
+results/
+results/*
+results/**
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
