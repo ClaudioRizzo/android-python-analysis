@@ -4,7 +4,7 @@
 # logs is the folder with all the logs of the stimulation + injection
 
 for i in $(cat vulnerables.txt); do
-	if grep -q -E ".*INFO:CONSOLE.*BabelView.* interface \[.*\] found.*\"" logs/"$i".logcat; then
+	if grep -q -E ".*INFO:CONSOLE.*BabelView.* interface \[.*\] found.*\"" results/"$i".logcat; then
 		echo "$i"
 	fi
 done

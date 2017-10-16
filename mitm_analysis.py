@@ -32,38 +32,43 @@ class MITMAnalysis(Analysis):
 		monkey_log = open('logs/monkey_'+str(os.getpid())+'.log', 'a')
 		bettercap_log = open('logs/bettercap_'+str(os.getpid())+'.log', 'a')
 		
-		self.log(os.getpid(), "Analysis started...")
+		
 		try:		
 			adb = self.adb_queue.get(True, 10)
 		except Empty:
-			self.log('SEVERE', "Process killed due to empty adb queue")
+			self.log('SEVERE', "Process killed due to empty adb queue", "")
 			return
 		
 		dev = adb.device
 		state = adb.get_state()
-
-		self.log('INFO', "waiting for device...")
+		
+		self.log('INFO', "waiting for device...", dev)
 		while state != 'device\n':
 			time.sleep(1)
 			state=adb.get_state()
 		
 
-		
+		self.log(os.getpid(), "Analysis started...", dev)
+		current_apk = None
 		while not self.apk_queue.empty():
 			try:
 				state = adb.get_state()
+				
 				while state != 'device\n':
 					time.sleep(1)
 					state=adb.get_state()
 				
-				current_apk = self.apk_queue.get(True, 10)
-				self.log('FETCH', current_apk.apk_id, dev)
+				if current_apk is None:
+					current_apk = self.apk_queue.get(True, 10)
+					self.log('FETCH', current_apk.apk_id, dev)
 				
+
 				exploit_path = os.path.join(EXPLOIT_FOLDER, current_apk.apk_id+'_exploit.js')
 				
 				if not os.path.exists(exploit_path):
 					self.log('NO_EXPLOIT', current_apk.apk_id, dev)
 					self.log('DONE', current_apk.apk_id, dev)
+					current_apk = None
 				else:
 					proxy_process = self.start_proxy_for_analysis(exploit_path, dns_port=str(adb.emulator.proxy_port - 1000), 
 						http_port=str(adb.emulator.proxy_port), https_port=str(adb.emulator.proxy_port + 1000), log_file=bettercap_log)
@@ -92,15 +97,16 @@ class MITMAnalysis(Analysis):
 						clproc = adb.clear_logs()
 						adb_log.write(clproc.stdout.decode('utf-8'))
 						
-						uproc = adb.uninstall_apk( current_apk.package, timeout=60 )
+						uproc = adb.uninstall_apk( current_apk.package, timeout=60)
 						adb_log.write(uproc.stdout.decode('utf-8'))
 						
 						self.kill(proxy_process.pid)
 						self.log('DONE', current_apk.apk_id, dev)
+						current_apk = None
 					except subprocess.TimeoutExpired:
 						adb.stop_emulator()
 						adb.emulator.start_emulator_with_proxy(port=adb.dev_port, no_window=False)
-						self.log('RE_LAUNCH', os.getpid(), dev)
+						self.log('RE_LAUNCH', current_apk.apk_id, dev)
 
 			except Empty:
 				self.log('INFO', 'The queue was empty', dev)

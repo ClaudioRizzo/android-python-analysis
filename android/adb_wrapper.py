@@ -18,6 +18,7 @@ class ADB():
 		self.adb = conf.adb
 		self.results = conf.results
 		self.dir_path = os.path.dirname(os.path.realpath(__file__))
+		self.log_file_path = 'logs/adb_'+str(os.getpid())+'.log'
 
 	def start_server(self):
 		return subprocess.run([self.adb, 'start_server'], stdout=subprocess.PIPE)
@@ -34,7 +35,8 @@ class ADB():
 		return subprocess.run(['adb', '-s', self.device, 'uninstall', apk_package], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
 
 	def monkey(self, package_name, timeout=None):
-		return subprocess.run(['adb', '-s', self.device, 'shell', 'monkey', '-p', package_name, '--throttle', '2000', '100'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
+		return subprocess.run(['adb', '-s', self.device, 'shell', 'monkey', '-p', package_name, '--throttle', '2000', '100'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+			timeout=timeout)
 
 	def logcat(self, file_name=None):
 		logcat_file = None

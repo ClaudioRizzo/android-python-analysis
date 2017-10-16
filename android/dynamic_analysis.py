@@ -40,6 +40,9 @@ class Analysis():
 		self.processes = processes
 		self.apk_queue = Queue()
 		self.adb_queue = Queue()
+		self.busy_pid = Queue()
+		self.emulators = [] # a list containing all the started emulators process
+		self.adbs = [] # list of all the running adb wrappers
 		
 
 	def __get_devices(self):
@@ -72,7 +75,9 @@ class Analysis():
 			proxy = self.proxy_ip+':'+str(proxy_port)
 			
 			a_emu = emu.AndroidEmulator(name, proxy=proxy, sdk_id=sdk_id)
-			a_emu.start_emulator_with_proxy(port=emu_port, no_window=no_window)
+			emu_proc = a_emu.start_emulator_with_proxy(port=emu_port, no_window=no_window)
+			self.emulators.append(emu_proc)
+
 			dev = 'emulator-'+str(emu_port)
 			adb = adb_wrapper.ADB(dev, emulator=a_emu)
 			emu_port+=2
@@ -95,6 +100,18 @@ class Analysis():
 			_apk = apk.APK(apk_path)
 			self.apk_queue.put(_apk)
 
+	'''
+	This method will be called when an hard restart is needed, for example if adb gets stuck for some emulator
+	'''
+	def __hard_analysis_restart(self, no_window=True):
+		for p in emulators:
+			subprocess.run(['kill', '-9', p.pid], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		del emulators[:]
+
+		for adb in adbs:
+			emu_proc = adb.emulator.start_emulator_with_proxy(port=adb.dev_port, no_window=no_window)
+			emulator.append(emu_proc)
+
 
 	def do_analysis(self):
 		
@@ -103,5 +120,14 @@ class Analysis():
 		workers.join()
 
 	def analysis(self, lock):
+		adb = self.__get_adb_from_queue()
+
 		raise NotImplementedError
 
+
+	def __get_adb_from_queue():
+		try:		
+			adb = self.adb_queue.get(True, 10)
+		except Empty:
+			self.log('SEVERE', "Process killed due to empty adb queue", "")
+			return
