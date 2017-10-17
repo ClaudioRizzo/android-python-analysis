@@ -3,6 +3,14 @@ import os
 
 from android.config import Config
 
+def start_server():
+	c = Config()
+	return subprocess.run([c.adb, 'start-server'], stdout=subprocess.PIPE)
+
+def kill_server():
+	c = Config()
+	return subprocess.run([c.adb, 'kill-server'], stdout=subprocess.PIPE)
+
 
 class ADB():
 
@@ -18,25 +26,28 @@ class ADB():
 		self.adb = conf.adb
 		self.results = conf.results
 		self.dir_path = os.path.dirname(os.path.realpath(__file__))
-		self.log_file_path = 'logs/adb_'+str(os.getpid())+'.log'
+		self.log_file_out = 'logs/adb_out_'+str(os.getpid())+'.log'
+		self.log_file_err = 'logs/adb_err_'+str(os.getpid())+'.log'
 
-	def start_server(self):
-		return subprocess.run([self.adb, 'start_server'], stdout=subprocess.PIPE)
-		
-		
 	def get_state(self):
 		proc = subprocess.run(['adb', '-s', self.device, 'get-state'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		return proc.stdout.decode('utf-8')
 	
 	def install_apk(self, apk_path, timeout=None):
-		return subprocess.run(['adb', '-s', self.device, 'install', apk_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
-
+		proc =  subprocess.run(['adb', '-s', self.device, 'install', apk_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
+		self.__log(proc)
+		return proc
+	
 	def uninstall_apk(self, apk_package, timeout=None):
-		return subprocess.run(['adb', '-s', self.device, 'uninstall', apk_package], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
-
+		proc = subprocess.run(['adb', '-s', self.device, 'uninstall', apk_package], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
+		self.__log(proc)
+		return proc
+	
 	def monkey(self, package_name, timeout=None):
-		return subprocess.run(['adb', '-s', self.device, 'shell', 'monkey', '-p', package_name, '--throttle', '2000', '100'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+		proc = subprocess.run(['adb', '-s', self.device, 'shell', 'monkey', '-p', package_name, '--throttle', '2000', '100'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
 			timeout=timeout)
+		self.__log(proc)
+		return proc
 
 	def logcat(self, file_name=None):
 		logcat_file = None
@@ -82,6 +93,16 @@ class ADB():
 
 	def reboot_emulator(self, timeout=None):
 		return subprocess.run([self.adb, '-s', self.device, 'reboot'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
+
+	def __log(self, p):
+		stdout = p.stdout.decode('utf-8')
+		stderr = p.stderr.decode('utf-8')
+
+		with open(self.log_file_out, 'a') as o:
+			o.write(stdout)
+
+		with open(self.log_file_err) as e:
+			e.write(stderr)
 
 
 class LogCat():
