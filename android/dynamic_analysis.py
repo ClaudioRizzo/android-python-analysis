@@ -6,8 +6,9 @@ import os
 from android import emu, adb_wrapper, apk
 from android import config
 
-from multiprocessing import Queue, Process, Lock, Manager
+from multiprocessing import Queue, Process, Lock, Manager, Value
 from multiprocessing.pool import Pool
+from queue import Empty
 
 class NoDaemonProcess(Process):
     # make 'daemon' attribute always return False
@@ -45,7 +46,9 @@ class Analysis():
 		self.emulators = [] # a list containing all the started emulators process
 		self.adbs = [] # list of all the running adb wrappers
 
-		self.hard_restart = False
+		self.hard_restart = Value('i', 0)
+		self.__process_to_clear = m.list()
+		self.__log_files = m.list()
 		
 
 	def __get_devices(self):
@@ -85,6 +88,7 @@ class Analysis():
 			adb = adb_wrapper.ADB(dev, emulator=a_emu)
 			emu_port+=2
 
+			self.adbs.append(adb)
 			self.adb_queue.put(adb)
 
 		# if the processes are more than the abds
@@ -107,59 +111,89 @@ class Analysis():
 	This method will be called when an hard restart is needed, for example if adb gets stuck for some emulator
 	'''
 	def __hard_analysis_restart(self, device, no_window=True):
-		for p in emulators:
-			subprocess.run(['kill', '-9', p.pid], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		#for p in self.emulators:
+			#p.kill()
+			##subprocess.run(['kill', '-9', str(p.pid)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		
-		del emulators[:]
+		#p = subprocess.run(['killall', 'emulator64-crash-service'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		
+		for adb in self.adbs:
+			adb.stop_emulator()
+
+		del self.emulators[:]
 
 		self.log("HARD_RESTART", "killing adb server" , device)
 		adb_wrapper.kill_server()
+
 		self.log("HARD_RESTART", "restarting adb server" , device)
 		adb_wrapper.start_server()
 
-		for adb in adbs:
+		for adb in self.adbs:
 			self.log("HARD_RESTART", "restarting emulator" , adb.device)
+				
 			emu_proc = adb.emulator.start_emulator_with_proxy(port=adb.dev_port, no_window=no_window)
-			emulator.append(emu_proc)
+			
+			self.emulators.append(emu_proc)
 
 		self.log("HARD_RESTART", "restarting called by %s completed" % device , device)
 
 
 	def start_analysis(self):
 		
-		workers = MyPool(self.processes, self.analysis, )
+		workers = MyPool(self.processes, self.__analysis, (Lock(), ) )
 		workers.close()
 		workers.join()
 
-	def analysis(self, lock):
-		
-		try:
-			
-			adb = self.__get_adb_from_queue()
-			self.__wait_for_device(adb, timeout=60)
+		self.__kill_to_clear()
+		#self.__close_all_pending_files()
 
-			while not self.apk_queue.empty():
+	def __analysis(self, lock):
+			
+		adb = self.__get_adb_from_queue()
+		
+		#self.__wait_for_device(adb, timeout=60)
+
+
+		while not self.apk_queue.empty():
+			try:
 				lock.acquire()
-					if self.hard_restart:
-						self.wait_for_other_processes()
-						self.__hard_analysis_restart(adb.device)
-						self.hard_restart = False
+				with self.hard_restart.get_lock():
+					if self.hard_restart.value == 1:
+						self.__wait_for_other_processes()
+						self.__hard_analysis_restart(adb.device, no_window=False)
+						self.hard_restart.value = 0 
+						self.__kill_to_clear()
+						self.__close_all_pending_files()
 				lock.release()
 
-				self.__wait_for_device(adb, timeout=60)
+				self.busy_pid[os.getpid()] = os.getpid()
+				
+				adb.wait_for_device(timeout=60)
+				self.__wait_for_boot(adb, timeout=60)
+				
+				current_apk = self.apk_queue.get(True, 10)
+				self.do_analysis(adb, current_apk, lock)
+
+				self.busy_pid.pop(os.getpid(), None)
 
 
-
-				self.do_analysis()
-
+			except subprocess.TimeoutExpired:
+				self.log('TIME_OUT', 'A timeout happened: %s' % current_apk.apk_id, adb.device)
+				self.busy_pid.pop(os.getpid(), None)
+				
+				with self.hard_restart.get_lock():
+					self.hard_restart.value = 1
+			except Empty:
+				self.log('INFO', 'The queue was empty', adb.device)
+			except subprocess.CalledProcessError as e:
+				self.log('PROCESS_ERROR', 'there was an error running a process', adb.device)
 
 		
 
-		except subprocess.TimeoutExpired:
-			lock.acquire()
-			# TODO: Condividi
-			self.hard_restart = True
-			lock.release()
+		
+		adb.stop_emulator()
+		self.log('INFO', 'Analysis completed', adb.device)
+
 
 
 
@@ -170,27 +204,48 @@ class Analysis():
 	def log(self, _type, message, emulator):
 		self.logger.info("[%s] %s (%s -- %s)" % (_type, message, os.getpid(), emuator, ))		
 
+	def add_process(self, process, l):
+		l.acquire()
+		self.__process_to_clear.append(process)
+		l.release()
+
+	def __kill_to_clear(self):
+		
+		for p in self.__process_to_clear:
+			subprocess.call(['kill', str(p)])
+		del self.__process_to_clear[:]
+		
 
 	def __wait_for_other_processes(self):
 		# Until there is some process busy
-		while not self.busy_pid:
+		while self.busy_pid:
 			# wait for the process to be free
 			time.sleep(1)
+			print("waiting for something: "+str(self.busy_pid))
 
-	def __get_adb_from_queue():
+	def __get_adb_from_queue(self):
 		try:		
 			adb = self.adb_queue.get(True, 10)
+			return adb
 		except Empty:
 			self.log('SEVERE', "Process killed due to empty adb queue", "")
 			return
 
-	def __wait_for_device(self, adb, timeout=None):
-		state = adb.get_state()
-		to = 0
-		while state != 'device\n':
-			if not timeout is None and to >= timeout:
-				raise subprocess.TimeoutExpired
-			time.sleep(1)
-			state=adb.get_state()
-			to += 1
+	def __wait_for_boot(self, adb, timeout=60):
+		self.log('BOOT', "waiting for device to boot", adb.device)
+		adb.wait_for_boot(timeout)
+
+	def __close_all_pending_files(self):
+		for fd in self.__log_files:
+			os.close(fd)
+		del self.__log_files[:]
+
+	def open_file_for_log(self, path, lock):
+		f = open(path, 'a')
+		lock.acquire()
+		self.__log_files.append(f.fileno())
+		lock.release()
+		return f
+
+
 

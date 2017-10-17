@@ -45,6 +45,6 @@ class AndroidEmulator():
 			return subprocess.Popen([self.emulator, '-avd', self.name, '-port', str(port), '-no-window', '-writable-system', '-http-proxy', self.proxy ], 
 				stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		else:
-			return subprocess.Popen([self.emulator, '-avd', self.name, '-port', str(port), '-writable-system' ,'-http-proxy', self.proxy ], 
+			return subprocess.Popen([self.emulator, '-avd', self.name, '-port', str(port), '-writable-system', '-http-proxy', self.proxy ], 
 				stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
