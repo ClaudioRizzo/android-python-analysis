@@ -5,8 +5,8 @@ import os
 from queue import Empty
 from android.dynamic_analysis import Analysis
 
-#EXPLOIT_FOLDER = '/home/clod/run_babelview/interfaces'
-EXPLOIT_FOLDER = '/home/clod/workspace/BabelView/interfaces'
+EXPLOIT_FOLDER = '/home/clod/run_babelview/interfaces'
+#EXPLOIT_FOLDER = '/home/clod/workspace/BabelView/interfaces'
 
 class MITMAnalysis(Analysis):
 	def __init__(self, processes=1,  name='AndroidAnalysis'):
@@ -25,49 +25,51 @@ class MITMAnalysis(Analysis):
 		subprocess.call(['kill', str(pid)])
 
 
-	def do_analysis(self, adb, current_apk, lock):
+	def do_analysis(self, adb, current_apk, lock, file_lock, clear_process_lock):
 		self.log('START', current_apk.apk_id, adb.device)
 
 		exploit_path = os.path.join(EXPLOIT_FOLDER, current_apk.apk_id+'_exploit.js')
 
 		if not os.path.exists(exploit_path):
 			self.log('NO_EXPLOIT', current_apk.apk_id, adb.device)
-		else:
+			with open(exploit_path, 'w') as f:
+				f.write("console.log('[BabelView] Javascript Executed');")
 
-			bettercap_log = self.open_file_for_log('logs/bettercap_'+str(os.getpid())+'.log', lock)
-			proxy_process = self.start_proxy_for_analysis(exploit_path, dns_port=str(adb.emulator.proxy_port - 1000), 
-				http_port=str(adb.emulator.proxy_port), https_port=str(adb.emulator.proxy_port + 1000), log_file=bettercap_log)
-			
-			self.add_process(proxy_process.pid, lock) # In case of a timeout we are sure this process will be killed
-			
-			time.sleep(5) # wait for proxy to properly start
-			self.log('PROXY', current_apk.apk_id, adb.device)
-			
-			adb.install_apk(current_apk.path, timeout=60)
-			
-			self.log('INSTALL', current_apk.apk_id, adb.device)
 
-			clproc = adb.clear_logs()
-			logcat = adb.logcat(current_apk.apk_id+'.logcat')
-			
-			adb.monkey( current_apk.package, timeout=(60*10) )
-			
-			time.sleep(20)
+		bettercap_log = self.open_file_for_log('logs/bettercap_'+str(os.getpid())+'.log', file_lock)
+		proxy_process = self.start_proxy_for_analysis(exploit_path, dns_port=str(adb.emulator.proxy_port - 1000), 
+			http_port=str(adb.emulator.proxy_port), https_port=str(adb.emulator.proxy_port + 1000), log_file=bettercap_log)
+		
+		self.add_process(proxy_process.pid, file_lock) # In case of a timeout we are sure this process will be killed
+		
+		time.sleep(5) # wait for proxy to properly start
+		self.log('PROXY', current_apk.apk_id, adb.device)
+		
+		adb.install_apk(current_apk.path, timeout=60)
+		
+		self.log('INSTALL', current_apk.apk_id, adb.device)
 
-			self.log('MONKEY', current_apk.apk_id, adb.device)
+		clproc = adb.clear_logs()
+		logcat = adb.logcat(current_apk.apk_id+'.logcat')
+		
+		adb.monkey( current_apk.package, timeout=(60*10) )
+		
+		time.sleep(20)
 
-			adb.stop_logcat(logcat)
-			adb.clear_logs()
+		self.log('MONKEY', current_apk.apk_id, adb.device)
 
-			adb.uninstall_apk( current_apk.package, timeout=60)
-			self.log('UNINSTALL', current_apk.apk_id, adb.device)
-			
-			#self.kill(proxy_process.pid)
-			proxy_process.kill()
-			bettercap_log.close()
-			
+		adb.stop_logcat(logcat)
+		adb.clear_logs()
 
-			adb.reboot_emulator(timeout=60)
+		adb.uninstall_apk( current_apk.package, timeout=60)
+		self.log('UNINSTALL', current_apk.apk_id, adb.device)
+		
+		#self.kill(proxy_process.pid)
+		proxy_process.kill()
+		bettercap_log.close()
+		
+
+		adb.reboot_emulator(timeout=60)
 		
 		self.log('DONE', current_apk.apk_id, adb.device)
 		
@@ -79,7 +81,7 @@ class MITMAnalysis(Analysis):
 
 def main():
 	
-	mitm = MITMAnalysis(processes=2)
+	mitm = MITMAnalysis(processes=4)
 	
 	mitm.init_analysis(sdk_id='system-images;android-19;default;x86', no_window=False)
 	mitm.init_queues()

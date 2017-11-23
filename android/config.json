@@ -6,5 +6,7 @@
 	"apks": "/home/clod/mnt_point/apks",
 	"results": "/home/clod/android-python-analysis/results",
 	"ids": "/home/clod/android-python-analysis/vulnerables.txt",
-	"proxy": "134.219.188.141"
+	"proxy": "134.219.188.141",
+	"test": "/home/clod/BabelViewTestApps/BabelViewIntents/app/build/outputs/apk"
 }
+

@@ -28,7 +28,7 @@ class AndroidEmulator():
 		return stderr.split('\n')[1]
 
 	def __get_present_avds(self):
-		proc = subprocess.run([self.avdmanager, 'list', 'avds', '-c'], stdout=subprocess.PIPE)
+		proc = subprocess.run([self.emulator, '-list-avds'], stdout=subprocess.PIPE)
 		stderr = proc.stdout.decode('utf-8')
 		return stderr.split('\n')
 

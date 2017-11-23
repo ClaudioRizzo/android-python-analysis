@@ -36,12 +36,13 @@ class ADB():
 		out = ''
 
 		while 'device' not in out:
+			cmd = ['adb', '-s', self.device, 'get-state']
 			try:
-				proc = subprocess.run(['adb', '-s', self.device, 'get-state'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+				proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 				out = proc.stdout.decode('utf-8')
 			except subprocess.CalledProcessError:
 				if datetime.datetime.now() > timeout_date:
-					raise subprocess.CalledProcessError()
+					raise subprocess.TimeoutExpired(" ".join(cmd), timeout)
 		
 		
 	
@@ -90,13 +91,11 @@ class ADB():
 		subprocess.run([self.adb, '-s', self.device, 'push', origin, destination], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 	def __writable_sdcard(self):
-		subprocess.run([self.adb, '-s', self.device, 'shell','su','-c', '"mount -o rw,remount rootfs /"'])
+		subprocess.run([self.adb, '-s', self.device, 'shell','su -c "mount -o rw,remount rootfs /"'])
 		subprocess.run([self.adb, '-s', self.device, 'shell', '"chmod 777 /mnt/sdcard"'])
 
 	def setup_ca(self, cacert_path, cacert_name):
-		#subprocess.run([self.adb, '-s', self.device, 'root'])
 		subprocess.run([self.adb, '-s', self.device, 'shell', 'su','-c', '"mount -o remount,rw /system"'])
-		#print (" ".join([self.adb, '-s', self.device, 'shell', 'su','-c', '"mount -o remount,rw /system"']))
 		self.push_file_to_emu(cacert_path, '/system/etc/security/cacerts/')
 		subprocess.run([self.adb, '-s', self.device, 'shell', 'su','-c', '"chmod 644 /system/etc/security/cacerts/'+cacert_name+'"'])
 		subprocess.run([self.adb, '-s', self.device, 'shell', 'reboot'], )
@@ -133,9 +132,9 @@ class ADB():
 			except subprocess.CalledProcessError as e:
 				if 'device offline' in e.output.decode('utf-8') or 'device not found' in e.output.decode('utf-8'):
 					if datetime.datetime.now() > timeout_date:
-						raise subprocess.TimeoutExpired
+						raise subprocess.TimeoutExpired(" ".join(check_boot_cmd), timeout)
 				else: 
-					raise subprocess.CalledProcessError()
+					raise e
 
 			time.sleep(1)
 		

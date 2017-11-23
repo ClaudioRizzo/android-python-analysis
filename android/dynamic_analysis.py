@@ -49,6 +49,7 @@ class Analysis():
 		self.hard_restart = Value('i', 0)
 		self.__process_to_clear = m.list()
 		self.__log_files = m.list()
+
 		
 
 	def __get_devices(self):
@@ -90,6 +91,7 @@ class Analysis():
 
 			self.adbs.append(adb)
 			self.adb_queue.put(adb)
+			
 
 		# if the processes are more than the abds
 		# then there was an error in starting the emulators
@@ -118,7 +120,7 @@ class Analysis():
 		#p = subprocess.run(['killall', 'emulator64-crash-service'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		
 		for adb in self.adbs:
-			adb.stop_emulator()
+			self.__kill_one_to_kill_all(adb.dev_port, adb.emulator.name)
 
 		del self.emulators[:]
 
@@ -140,14 +142,14 @@ class Analysis():
 
 	def start_analysis(self):
 		
-		workers = MyPool(self.processes, self.__analysis, (Lock(), ) )
+		workers = MyPool(self.processes, self.__analysis, (Lock(), Lock(), Lock(), ) )
 		workers.close()
 		workers.join()
 
 		self.__kill_to_clear()
 		#self.__close_all_pending_files()
 
-	def __analysis(self, lock):
+	def __analysis(self, lock, file_lock, clear_process_lock):
 			
 		adb = self.__get_adb_from_queue()
 		
@@ -163,7 +165,7 @@ class Analysis():
 						self.__hard_analysis_restart(adb.device, no_window=False)
 						self.hard_restart.value = 0 
 						self.__kill_to_clear()
-						self.__close_all_pending_files()
+						#self.__close_all_pending_files()
 				lock.release()
 
 				self.busy_pid[os.getpid()] = os.getpid()
@@ -172,21 +174,24 @@ class Analysis():
 				self.__wait_for_boot(adb, timeout=60)
 				
 				current_apk = self.apk_queue.get(True, 10)
-				self.do_analysis(adb, current_apk, lock)
+				self.do_analysis(adb, current_apk, lock, file_lock, clear_process_lock)
 
 				self.busy_pid.pop(os.getpid(), None)
 
+			except Empty as e1:
+				self.log('INFO', 'The queue was empty', adb.device)
+				self.logger.error("(%s) %s" % (adb.device, e1, ))
+				self.busy_pid.pop(os.getpid(), None)
 
-			except subprocess.TimeoutExpired:
-				self.log('TIME_OUT', 'A timeout happened: %s' % current_apk.apk_id, adb.device)
+			except (subprocess.TimeoutExpired, subprocess.CalledProcessError, Exception) as e:
+				self.log('GENERAL_ERROR', 'A timeout or an error happened: %s' % current_apk.apk_id, adb.device)
+				self.logger.error("(%s) %s" % (adb.device, e, ))
+
 				self.busy_pid.pop(os.getpid(), None)
 				
 				with self.hard_restart.get_lock():
 					self.hard_restart.value = 1
-			except Empty:
-				self.log('INFO', 'The queue was empty', adb.device)
-			except subprocess.CalledProcessError as e:
-				self.log('PROCESS_ERROR', 'there was an error running a process', adb.device)
+
 
 		
 
@@ -202,7 +207,7 @@ class Analysis():
 		raise NotImplementedError
 
 	def log(self, _type, message, emulator):
-		self.logger.info("[%s] %s (%s -- %s)" % (_type, message, os.getpid(), emuator, ))		
+		self.logger.info("[%s] %s (%s -- %s)" % (_type, message, os.getpid(), emulator, ))		
 
 	def add_process(self, process, l):
 		l.acquire()
@@ -246,6 +251,14 @@ class Analysis():
 		self.__log_files.append(f.fileno())
 		lock.release()
 		return f
+
+	def __kill_one_to_kill_all(self, port, avd_name):
+		cmd = ['pgrep', '-f', 'port %s' % port]
+		p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)		
+		stdout = p.stdout.decode('utf-8').strip()
+		subprocess.run(['kill', '-9', stdout ] )
+		subprocess.run(['killall', 'emulator64-crash-service'])
+		subprocess.run(['rm', '-f', os.path.expanduser('~')+'/.android/avd/'+avd_name+'.avd/hardware-qemu.ini.lock'])
 
 
 
