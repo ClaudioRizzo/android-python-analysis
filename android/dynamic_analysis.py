@@ -49,6 +49,7 @@ class Analysis():
 		self.hard_restart = Value('i', 0)
 		self.__process_to_clear = m.list()
 		self.__log_files = m.list()
+		self.__no_window = True
 
 		
 
@@ -74,6 +75,7 @@ class Analysis():
 	def init_analysis(self, emu_name='DynamicAnalysis', sdk_id='', no_window=True):
 		proxy_port = 8080
 		emu_port = 5554
+		self.__no_window = no_window
 		
 		for i in range(self.processes):
 			
@@ -82,7 +84,7 @@ class Analysis():
 			proxy = self.proxy_ip+':'+str(proxy_port)
 			
 			a_emu = emu.AndroidEmulator(name, proxy=proxy, sdk_id=sdk_id)
-			emu_proc = a_emu.start_emulator_with_proxy(port=emu_port, no_window=no_window)
+			emu_proc = a_emu.start_emulator_with_proxy(port=emu_port, no_window=self.__no_window)
 			self.emulators.append(emu_proc)
 
 			dev = 'emulator-'+str(emu_port)
@@ -162,7 +164,7 @@ class Analysis():
 				with self.hard_restart.get_lock():
 					if self.hard_restart.value == 1:
 						self.__wait_for_other_processes()
-						self.__hard_analysis_restart(adb.device, no_window=False)
+						self.__hard_analysis_restart(adb.device no_window=self.__no_window)
 						self.hard_restart.value = 0 
 						self.__kill_to_clear()
 						#self.__close_all_pending_files()
