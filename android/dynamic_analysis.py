@@ -164,7 +164,7 @@ class Analysis():
 				with self.hard_restart.get_lock():
 					if self.hard_restart.value == 1:
 						self.__wait_for_other_processes()
-						self.__hard_analysis_restart(adb.device no_window=self.__no_window)
+						self.__hard_analysis_restart(adb.device, no_window=self.__no_window)
 						self.hard_restart.value = 0 
 						self.__kill_to_clear()
 						#self.__close_all_pending_files()
