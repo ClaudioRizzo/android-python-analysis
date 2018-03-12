@@ -42,9 +42,9 @@ class AndroidEmulator():
 	
 	def start_emulator_with_proxy(self, port=5554, 	no_window=True):
 		if no_window:
-			return subprocess.Popen([self.emulator, '-avd', self.name, '-port', str(port), '-no-window', '-writable-system', '-http-proxy', self.proxy ], 
+			return subprocess.Popen([self.emulator, '-avd', self.name, '-port', str(port),'-no-snapshot-save', '-no-window', '-writable-system', '-http-proxy', self.proxy ], 
 				stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		else:
-			return subprocess.Popen([self.emulator, '-avd', self.name, '-port', str(port), '-writable-system', '-http-proxy', self.proxy ], 
+			return subprocess.Popen([self.emulator, '-avd', self.name, '-port', str(port), '-no-snapshot-save', '-writable-system', '-http-proxy', self.proxy ], 
 				stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
