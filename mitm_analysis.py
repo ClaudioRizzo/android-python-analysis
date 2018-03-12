@@ -61,8 +61,8 @@ class MITMAnalysis(Analysis):
 		adb.stop_logcat(logcat)
 		adb.clear_logs()
 
-		adb.uninstall_apk( current_apk.package, timeout=60)
-		self.log('UNINSTALL', current_apk.apk_id, adb.device)
+		#adb.uninstall_apk( current_apk.package, timeout=60)
+		#self.log('UNINSTALL', current_apk.apk_id, adb.device)
 		
 		#self.kill(proxy_process.pid)
 		proxy_process.kill()
