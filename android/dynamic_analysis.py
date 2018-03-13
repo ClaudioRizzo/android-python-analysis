@@ -228,7 +228,7 @@ class Analysis():
 		while self.busy_pid:
 			# wait for the process to be free
 			time.sleep(1)
-			print("waiting for something: "+str(self.busy_pid))
+			# print("waiting for something: "+str(self.busy_pid))
 
 	def __get_adb_from_queue(self):
 		try:		

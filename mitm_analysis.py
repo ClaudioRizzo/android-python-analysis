@@ -5,7 +5,7 @@ import os
 from queue import Empty
 from android.dynamic_analysis import Analysis
 
-EXPLOIT_FOLDER = '/home/clod/run_babelview/interfaces'
+EXPLOIT_FOLDER = '/home/clod/BV_ScriptsAndExperiments/RAID_2018/allIfaces'
 #EXPLOIT_FOLDER = '/home/clod/workspace/BabelView/interfaces'
 
 class MITMAnalysis(Analysis):
@@ -61,7 +61,7 @@ class MITMAnalysis(Analysis):
 		adb.stop_logcat(logcat)
 		adb.clear_logs()
 
-		#adb.uninstall_apk( current_apk.package, timeout=60)
+		adb.uninstall_apk( current_apk.package, timeout=60)
 		#self.log('UNINSTALL', current_apk.apk_id, adb.device)
 		
 		#self.kill(proxy_process.pid)
@@ -83,7 +83,7 @@ def main():
 	
 	mitm = MITMAnalysis(processes=4)
 	
-	mitm.init_analysis(sdk_id='system-images;android-19;default;x86', no_window=False)
+	mitm.init_analysis(sdk_id='system-images;android-19;default;x86', no_window=True)
 	mitm.init_queues()
 	mitm.start_analysis()
 
