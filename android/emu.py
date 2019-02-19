@@ -46,7 +46,7 @@ class AndroidEmulator():
         proc.communicate(b'no')
         proc.wait(timeout=20)
         
-        with open("{}/.android/{}.avd/config.ini".format(Path.home(), self.name), 'a') as avd_ini:
+        with open("{}/.android/avd/{}.avd/config.ini".format(Path.home(), self.name), 'a') as avd_ini:
             avd_ini.write(
                 "hw.ramSize={}\nhw.cpu.ncore={}".format(ram_size, ncore))
             
