@@ -1,5 +1,6 @@
 import subprocess
 from android.config import Config
+from pathlib import Path
 
 
 class AndroidEmulator():
@@ -36,14 +37,19 @@ class AndroidEmulator():
         stderr = proc.stdout.decode('utf-8')
         return stderr.split('\n')
 
-    def __create_avd(self, name, sdk_id):
+    def __create_avd(self, name, sdk_id, ncore=2, ram_size=1024):
         if(sdk_id == ''):
             sdk_id = self.__get_sdk_id()
 
         proc = subprocess.Popen([self.avdmanager, 'create', 'avd', '-n',
                                  name, '-k', sdk_id], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         proc.communicate(b'no')
-        return proc.wait(timeout=20)
+        proc.wait(timeout=20)
+        
+        with open("{}/.android/{}.avd/config.ini".format(Path.home(), self.name), 'a') as avd_ini:
+            avd_ini.write(
+                "hw.ramSize={}\nhw.cpu.ncore={}".format(ram_size, ncore))
+            
 
     def start_emulator_no_window(self, port):
         '''
