@@ -18,7 +18,7 @@ class ADB():
 
 	'''
 	@param: device - the name of the device this ADB has to manage
-	@param: adb_path - path to adb executable in the SDK. By default it is assumed to be in the PATH variable
+	@param: emulator - the emulator this ADB is wrapping
 	'''
 	def __init__(self, device, emulator):
 		conf = Config()
@@ -79,7 +79,7 @@ class ADB():
 		logcat.pid.terminate()
 		
 
-	def force_logcat_stop(self, logcat_pid):
+	def force_logcat_stop(self, logcat):
 		logcat.pid.kill()
 		logcat.log_file.close()
 
@@ -93,6 +93,9 @@ class ADB():
 	def __writable_sdcard(self):
 		subprocess.run([self.adb, '-s', self.device, 'shell','su -c "mount -o rw,remount rootfs /"'])
 		subprocess.run([self.adb, '-s', self.device, 'shell', '"chmod 777 /mnt/sdcard"'])
+
+	def run_shell_command(self, command):
+		subprocess.run([self.adb, '-s', self.device, 'shell', command])
 
 	def setup_ca(self, cacert_path, cacert_name):
 		subprocess.run([self.adb, '-s', self.device, 'shell', 'su','-c', '"mount -o remount,rw /system"'])
