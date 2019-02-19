@@ -11,8 +11,11 @@ class AndroidEmulator():
         self.proxy = proxy
         self.proxy_port = int(self.proxy.split(':')[-1])
 
-        if name not in self.__get_present_avds():
-            self.__create_avd(name, sdk_id)
+        if name not in self.__get_present_avds():  
+            try:
+                self.__create_avd(name, sdk_id)
+            except subprocess.TimeoutExpired:
+                raise EmulatorException("Faild to create avd")
 
     def __get_sdk_id(self):
         proc = subprocess.run(
@@ -40,6 +43,7 @@ class AndroidEmulator():
         proc = subprocess.Popen([self.avdmanager, 'create', 'avd', '-n',
                                  name, '-k', sdk_id], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         proc.communicate(b'no')
+        return proc.wait(timeout=20)
 
     def start_emulator_no_window(self, port):
         '''
@@ -63,3 +67,9 @@ class AndroidEmulator():
         else:
             return subprocess.Popen([self.emulator, '-avd', self.name, '-port', str(port), '-no-snapshot-save', '-writable-system', '-http-proxy', self.proxy],
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+class EmulatorException(Exception):
+    def __init__(self, message):
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
